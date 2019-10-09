@@ -1,0 +1,5 @@
+---
+# defaults for configure-sso
+sso_login_username: admin
+sso_route_prefix: sso-user-sso
+eval_user_count: 50

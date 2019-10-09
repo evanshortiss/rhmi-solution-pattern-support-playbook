@@ -1,0 +1,54 @@
+---
+- name: 'Check mandatory variables are defined'
+  assert:
+    that:
+      - cluster_apps_host is defined
+      - sso_login_password is defined
+
+- name: Wait until RH SSO API is available 
+  uri: 
+    url: https://{{sso_route_prefix}}.{{cluster_apps_host}}
+    method: HEAD
+    follow_redirects: safe
+    validate_certs: no
+  register: wait_sso_result
+  until: wait_sso_result is succeeded
+  ignore_errors: yes
+  retries: 15
+  delay: 60
+
+- name: Get SSO token
+  shell: "curl --insecure -X POST 'https://{{sso_route_prefix}}.{{cluster_apps_host}}/auth/realms/master/protocol/openid-connect/token' \
+  -H 'Content-Type: application/x-www-form-urlencoded' -d 'username={{ sso_login_username | default('customer-admin') }}' -d 'password={{ sso_login_password | default('replace-me-please') }}' -d 'grant_type=password' -d 'client_id=admin-cli'"
+  register: token_text
+
+- set_fact: TKN={{ (token_text.stdout | from_json).access_token }}
+
+- debug:
+    msg: "RH SSO token being used is {{ TKN }}"
+
+- name: Increase Token Lifespan (60mins)
+  uri: 
+    url: 'https://{{sso_route_prefix}}.{{cluster_apps_host}}/auth/admin/realms/master'
+    method: PUT
+    body: "{\"realm\":\"master\", \"accessTokenLifespan\":\"3600\"}"
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ TKN }}"
+    return_content: yes
+    validate_certs: no
+    status_code: 204
+
+- name: Get SSO Token with Longer Lifespan
+  shell: "curl --insecure -X POST 'https://{{sso_route_prefix}}.{{cluster_apps_host}}/auth/realms/master/protocol/openid-connect/token' \
+  -H 'Content-Type: application/x-www-form-urlencoded' -d 'username={{ sso_login_username | default('customer-admin') }}' -d 'password={{ sso_login_password | default('replace-me-please') }}' -d 'grant_type=password' -d 'client_id=admin-cli'"
+  register: token_text
+
+- set_fact: TKN={{ (token_text.stdout | from_json).access_token }}
+
+- debug: var=TKN
+
+- name: Create evals user realms
+  include_tasks: ./create-realm.yml
+  with_sequence: start=1 end={{ eval_user_count }} format=evals%02d
