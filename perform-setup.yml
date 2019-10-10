@@ -2,3 +2,4 @@
 - hosts: localhost
   roles:
     - configure-sso
+    - create-3scale-tenants

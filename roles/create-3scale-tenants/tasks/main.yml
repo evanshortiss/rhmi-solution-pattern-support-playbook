@@ -1,0 +1,4 @@
+---
+- name: Create 3scale tenants for evals
+  include_tasks: ./create-tenant.yml
+  with_sequence: start=1 end={{ eval_user_count }} format=evals%02d
