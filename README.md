@@ -8,7 +8,7 @@ This is tested against RHMI 1.5 clusters and targets the User-Facing SSO. It
 will execute the following tasks:
 - create a realm for each of the 50 evals users on the cluster. The
 evals users can then access the Realm via a URL like so _https://sso-user-sso.apps.$YOUR_CLUSTER_ID.open.redhat.com/auth/admin/evalsXX/console/index.html_.
-- create a tenant in 3scale API Management for each of the 50 evals users. They will be able to access the accounts at https://evalsXX-admin.apps.$YOUR_CLUSTER_ID.open.redhat.com, with `evalsXX` as username and default password `Password1` (can be changed in `create-3scale-tenants/defaults/main.yml`).
+- create a tenant in 3scale API Management for each of the 50 evals users. They will be able to access the accounts at https://evalsXX-admin.apps.$YOUR_CLUSTER_ID.open.redhat.com, with `evalsXX` as username and default password `password` (can be changed in `create-3scale-tenants/defaults/main.yml`).
 
 **Note:** `evalsXX` is `evals01` to `evals50`.
 

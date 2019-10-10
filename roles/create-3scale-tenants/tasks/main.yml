@@ -1,4 +1,37 @@
 ---
+- name: Get 3scale master hostname
+  # shell: "oc get route/system-master -n 3scale -o json | jq -r '.spec.host'" # for 3scale 2.5
+  shell: "oc get route -n {{ threescale_namespace }} -l zync.3scale.net/route-to=system-master -o jsonpath='{.items[0].spec.host}'" # for 3scale 2.6
+  register: threescale_host_cmd
+
+- name: Set 3scale master hostname var
+  set_fact:
+    threescale_host: "{{ threescale_host_cmd.stdout }}"
+
+- debug:
+    msg: 3scale master URL is {{ threescale_host }}
+
+- name: Retrieve 3scale master access token
+  shell: oc describe dc/system-app -n {{ threescale_namespace }} | grep MASTER_ACCESS_TOKEN | head -1 | awk -F '"' '{print $2}'
+  register: master_access_token_cmd
+
+- set_fact:
+    threescale_master_access_token: "{{ master_access_token_cmd.stdout }}"
+
+- debug:
+    msg: 3scale master access token is {{ threescale_master_access_token }}
+
+- name: Wait until 3scale API is available 
+  uri: 
+    url: https://{{ threescale_host }}
+    method: HEAD
+    validate_certs: no
+  register: wait_threescale_result
+  until: wait_threescale_result is succeeded
+  ignore_errors: yes
+  retries: 10
+  delay: 60
+
 - name: Create 3scale tenants for evals
   include_tasks: ./create-tenant.yml
   with_sequence: start=1 end={{ eval_user_count }} format=evals%02d
