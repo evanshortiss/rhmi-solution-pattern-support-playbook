@@ -30,5 +30,5 @@ export YOUR_CLUSTER_ID=eshortis-83ef
 
 ansible-playbook perform-setup.yml \
 -e cluster_apps_host=apps.$YOUR_CLUSTER_ID.open.redhat.com \
--e sso_login_password=$SSO_LOGIN_PASSWORD
+-e sso_login_password=$SSO_ADMIN_PASSWORD
 ```
